@@ -18,6 +18,9 @@ class RRI:
 
     def plotSpectrum(self, x, y, title):
         plt.figure(title)
+        for i in range(len(y)):
+            if y[i] == 0:
+                x[i] = 0
         plt.plot(y, x, 'r-')
         plt.ylabel('Enery')
 
