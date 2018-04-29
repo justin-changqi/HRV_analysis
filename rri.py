@@ -92,7 +92,7 @@ class RRI:
 
 if __name__ == "__main__":
     rri = RRI('RRI.csv')
-    # rri.plotData(rri.rri_data, 'RRI')
+    rri.plotData(rri.rri_data, 'RRI')
     SDNN = rri.getSDNN(rri.rri_data)
     RMSSD = rri.getRMSSD(rri.rri_data)
     print ('SDNN:', '%.6f' %SDNN, 's')
