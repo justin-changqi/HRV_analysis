@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 import math
 import matplotlib.pyplot as plt
+import cmath
 
 class RRI:
     def __init__(self, file_name):
@@ -47,9 +48,43 @@ class RRI:
         sorted_sp = []
         sorted_freq = []
         for index in freq_sorted_indexes:
-            sorted_sp.append(sp[index])
+            sorted_sp.append(cmath.polar(sp[index])[0])
             sorted_freq.append(freq[index])
         return np.array(sorted_sp), np.array(sorted_freq)
+
+    def getHFLF(self, sp, freq):
+        HF = 0
+        LF = 0
+        for i in range(len(freq)):
+            if freq[i] >= 0.15 and freq[i] < 0.4:
+                # HF
+                HF += sp[i]
+            if freq[i] >= 0.04 and freq[i] < 0.15:
+                # LF
+                LF += sp[i]
+        return HF, LF
+
+    def BergerResampling(self, data, freq):
+        nornal_scalar = math.pow(np.mean(data), 2)
+        pi = math.pi
+        N = len(data)
+        tn = sum(data)
+        Pc_f = []
+        for i in range(len(freq)):
+            f = freq[i]
+            if (f==0): f = 1
+            w = 2*pi*f*tn
+            sigma_cos = 0
+            sigma_sin = 0
+            for k in range(len(data)):
+                tk = sum(data[:k])
+                sigma_cos += math.cos(2*pi*f*tk)
+                sigma_sin += math.sin(2*pi*f*tk)
+            s0 = ((N*math.sin(w))/w) - sigma_cos
+            s1 = ((N*(math.cos(w)-1)/w)) + sigma_sin
+            Pc = tn/(N**2)*(math.pow(s0, 2) + math.pow(s1, 2))
+            Pc_f.append(Pc/nornal_scalar)
+        return np.array(Pc_f), freq
 
 
 if __name__ == "__main__":
@@ -57,8 +92,22 @@ if __name__ == "__main__":
     # rri.plotData(rri.rri_data, 'RRI')
     SDNN = rri.getSDNN(rri.rri_data)
     RMSSD = rri.getRMSSD(rri.rri_data)
+    print ('SDNN:', '%.6f' %SDNN, 's')
+    print ('RMSSD:', '%.6f' %RMSSD, 's')
+    # FFT
     sp_rri, freq_rri = rri.getFFT(rri.rri_data)
+    HF, LF = rri.getHFLF(sp_rri, freq_rri)
     rri.plotSpectrum(sp_rri, freq_rri, 'Spectrum')
-    print ('SDNN: ', '%.6f' %SDNN, 's')
-    print ('RMSSD: ', '%.6f' %RMSSD, 's')
+    # Berger Resampling
+    sp_br, freq_br = rri.BergerResampling(rri.rri_data, freq_rri)
+    HF_br, LF_br = rri.getHFLF(sp_br, freq_br)
+    rri.plotSpectrum(sp_br, freq_br, 'Berger Spectrum')
+    print ('=========== FFT ===========')
+    print ('FFT HF:\t\t', '%.3f' %HF)
+    print ('FFT LF:\t\t', '%.3f' %LF)
+    print ('FFT LF/HF:\t', '%.3f' %(LF/HF))
+    print ('==== Berger Resampling ====')
+    print ('FFT HF:\t\t', '%.3f' %HF_br)
+    print ('FFT LF:\t\t', '%.3f' %LF_br)
+    print ('FFT LF/HF:\t', '%.3f' %(LF_br/HF_br))
     plt.show()
