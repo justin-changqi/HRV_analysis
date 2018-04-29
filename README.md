@@ -11,7 +11,7 @@ sudo pip3 install numpy
 sudo pip3 install matplotlib
 ```
 
-## Execute the
+## Execute the the code
 ```
 python3 rri.py
 ```
